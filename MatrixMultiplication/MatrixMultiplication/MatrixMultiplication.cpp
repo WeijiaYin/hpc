@@ -265,8 +265,10 @@ int main()
 	int *subs = NULL;
 	int **sub_matAs = NULL;
 	int *sum = NULL;
+	int **c = NULL;
 	int i = 0, j = 0, q = 0, t = 0;
 	int lineNum = 0;
+	FILE *cf = NULL;
 	MPI_Init(NULL, NULL);
 
 	int world_rank;
@@ -378,8 +380,37 @@ int main()
 		{
 			printf("%d ", sum[i]);
 		}
+		c = (int **)malloc(lineNum * sizeof(int *));
+		for (i = 0; i < lineNum; i++)
+		{
+			c[i] = (int *)malloc(lineNum * sizeof(int));
+		}
+
+		q = 0;
+
+		for (i = 0; i < world_size; i++)
+		{
+			for (j = 0; j < lineNum; j++)
+			{
+				for (t = i * (lineNum / world_size); t < (lineNum / world_size)*i + (lineNum / world_size); t++)
+				{
+					c[j][t] = sum[q];
+					q++;
+				}
+			}
+		}
+		cf = fopen("c.txt", "w+");
+		for (i = 0; i < lineNum; i++)
+		{
+			for (j = 0; j < lineNum; j++)
+			{
+				fprintf(cf, "%d,", c[i][j]);
+			}
+			fprintf(cf, "\n");
+		}
+		fclose(cf);
 	}
+
 	MPI_Finalize();
     return 0;
 }
-
