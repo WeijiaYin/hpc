@@ -335,6 +335,7 @@ int main()
 	int *sub_mat_mul = NULL;
 	int *subs = NULL;
 	int **sub_matAs = NULL;
+	int *sum = NULL;
 	int i = 0;
 	int lineNum = 0;
 	MPI_Init(NULL, NULL);
@@ -438,6 +439,17 @@ int main()
 		for (int i = 0; i < 16; i++)
 		{
 			printf("%d ", sub_mat_mul[i]);
+		}
+	}
+
+	MPI_Barrier(MPI_COMM_WORLD);
+	sum = (int *)malloc(64 * sizeof(int));
+	MPI_Gather(sub_mat_mul, 16, MPI_INT, sum, 16, MPI_INT, 0, MPI_COMM_WORLD);
+	if (world_rank == 0) {
+		printf("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
+		for (int i = 0; i < 64; i++)
+		{
+			printf("%d ", sum[i]);
 		}
 	}
 	MPI_Finalize();
