@@ -330,7 +330,7 @@ int main()
 {
 	int *a = NULL;
 	int **b = NULL;
-	int *sub_mat = NULL;
+//	int *sub_mat = NULL;
 	int *sub_matB = NULL;
 	int *sub_mat_mul = NULL;
 	int *subs = NULL;
@@ -343,6 +343,12 @@ int main()
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	int world_size;
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+	sub_matAs = (int **)malloc(world_size * sizeof(int *));
+	for (int j = 0; j < world_size; j++) {
+		sub_matAs[j] = (int *)malloc(lineNum * lineNum / world_size * sizeof(int));
+	}
+
 	if (world_rank == 0)
 	{
 		lineNum = countLine("a.txt");
@@ -353,8 +359,8 @@ int main()
 	printf("process %d llllllllllllll%d\n", world_rank, lineNum);
 	MPI_Bcast(&world_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	printf("process %d pppppppppppppp%d\n", world_rank, world_size);
-	sub_mat = (int *)malloc(lineNum / world_size *lineNum * sizeof(int));
-	MPI_Scatter(a, lineNum / world_size *lineNum, MPI_INT, sub_mat, lineNum / world_size *lineNum, MPI_INT, 0, MPI_COMM_WORLD);
+//	sub_mat = (int *)malloc(lineNum / world_size *lineNum * sizeof(int));
+	MPI_Scatter(a, lineNum / world_size *lineNum, MPI_INT, sub_matAs[0], lineNum / world_size *lineNum, MPI_INT, 0, MPI_COMM_WORLD);
 
 	sub_matB = (int *)malloc(world_size * sizeof(int));
 	if (world_rank == 0) {
@@ -374,13 +380,13 @@ int main()
 	printf("\n");
 	for (int i = 0; i < 16; i++)
 	{
-		printf("%d ", sub_mat[i]);
+		printf("%d ", sub_matAs[0][i]);
 	}
 	printf("\n");
 
 	//sub_mat_mul = submatrixMultiple(sub_mat, sub_matB, 4, lineNum);
 	//sub_mat_mul = aaa(sub_mat, sub_matB);
-	sub_mat_mul = multiple(sub_mat, sub_matB, 4, lineNum);
+	sub_mat_mul = multiple(sub_matAs[0], sub_matB, 4, lineNum);
 //	int bcd[16];
 //	memcpy(bcd, sub_mat_mul, 16 * sizeof(int));
 	for (int i = 0; i < 16; i++)
@@ -391,14 +397,14 @@ int main()
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
 	
-//	for (int i = 1; i < world_size; i++)
-//	{
+	for (int q = 1; q < world_size; q++)
+	{
 		if (world_rank == 0)
 		{
-			subs = submatrixBs(world_size, lineNum, i, b);
+			subs = submatrixBs(world_size, lineNum, q, b);
 		}
 		MPI_Scatter(subs, world_size, MPI_INT, sub_matB, world_size, MPI_INT, 0, MPI_COMM_WORLD);
-		
+
 		printf("222222222222222222222I am proc %d\n", world_rank);
 		for (int i = 0; i < 4; i++)
 		{
@@ -406,72 +412,34 @@ int main()
 		}
 		for (int i = 0; i < 16; i++)
 		{
-			printf("%d ", sub_mat[i]);
-		}
-		
-		sub_matAs = (int **)malloc((world_size - 1) * sizeof(int *));
-		for (int j = 0; j < world_size - 1; j++) {
-			sub_matAs[j] = (int *)malloc(lineNum * lineNum / world_size * sizeof(int));
-		}
-
-		int left = 0;
-		if (world_rank > 0)
-		{
-			left = world_rank - 1;
-		}
-		else {
-			left = MPI_PROC_NULL;
-		}
-
-		int right = 0;
-		if (world_rank < world_size - 1) {
-			right = world_rank + 1;
-		}
-		else {
-			right = MPI_PROC_NULL;
+			printf("%d ", sub_matAs[q -1][i]);
 		}
 
 		if (world_rank == 0) {
-			MPI_Sendrecv(sub_mat, 16, MPI_INT, world_size-1, 0, sub_matAs[0], 16, MPI_INT, right, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			MPI_Sendrecv(sub_matAs[q -1], lineNum * lineNum / world_size, MPI_INT, world_size - 1, 0, sub_matAs[q], lineNum * lineNum / world_size, MPI_INT, world_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 		else if (world_rank == world_size - 1) {
-			MPI_Sendrecv(sub_mat, 16, MPI_INT, left, 0, sub_matAs[0], 16, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			MPI_Sendrecv(sub_matAs[q-1], lineNum * lineNum / world_size, MPI_INT, world_rank - 1, 0, sub_matAs[q], lineNum * lineNum / world_size, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 		else {
-			MPI_Sendrecv(sub_mat, 16, MPI_INT, left, 0, sub_matAs[0], 16, MPI_INT, right, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+			MPI_Sendrecv(sub_matAs[q-1], lineNum * lineNum / world_size, MPI_INT, world_rank - 1, 0, sub_matAs[q], lineNum * lineNum / world_size, MPI_INT, world_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 
-//		MPI_Sendrecv(sub_mat, 16, MPI_INT, left, 0, sub_matAs[0], 16, MPI_INT, right, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-	
+		//		MPI_Sendrecv(sub_mat, 16, MPI_INT, left, 0, sub_matAs[0], 16, MPI_INT, right, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
 		printf("asddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffprocess%d\n", world_rank);
 		for (int i = 0; i < 16; i++)
 		{
-			printf("%d ", sub_matAs[0][i]);
+			printf("%d ", sub_matAs[q-1][i]);
 		}
 		printf("\n");
-	/*	if (world_rank == 0)
+		sub_mat_mul = matrixAdd(sub_mat_mul, multiple(sub_matAs[q], sub_matB, world_size, lineNum), world_size, lineNum);
+		printf("9999999999999999999999999999999999999999999999999999999999999999999999999999999process%d\n", world_rank);
+		for (int i = 0; i < 16; i++)
 		{
-			printf("asddffffffffffffflkkkkkkkkkkkkkkkkkkkkkkkkkkfffprocess%d\n", world_rank);
-			for (int i = 0; i < 16; i++)
-			{
-				printf("%d ", sub_mat[i]);
-			}
-			printf("\n");
-			MPI_Send(sub_mat, 16, MPI_INT, world_size - 1, 0, MPI_COMM_WORLD);
+			printf("%d ", sub_mat_mul[i]);
 		}
-		MPI_Barrier(MPI_COMM_WORLD);
-
-		if (world_rank == world_size - 1)
-		{
-			MPI_Recv(sub_matAs[0], 16, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-			printf("asddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffprocess%d\n", world_rank);
-			for (int i = 0; i < 16; i++)
-			{
-				printf("%d ", sub_matAs[0][i]);
-			}
-			printf("\n");
-		}*/
-
+	}
 	MPI_Finalize();
     return 0;
 }
