@@ -226,18 +226,18 @@ int *multiple(int *subA, int *subB, int p, int lineNum)
 		}
 	}
 
-	for (i = 0; i < lineNum; i++)
-	{
-		free(a[i]);
-		free(c[i]);
-	}
-	free(a);
-	free(c);
-	for (i = 0; i < block; i++)
-	{
-		free(b[i]);
-	}
-	free(b);
+//	for (i = 0; i < lineNum; i++)
+//	{
+//		free(a[i]);
+//		free(c[i]);
+//	}
+//	free(a);
+//	free(c);
+//	for (i = 0; i < block; i++)
+//	{
+//		free(b[i]);
+//	}
+//	free(b);
 
 	return cc;
 }
@@ -402,21 +402,22 @@ int main(int argc, char** argv)
 				}
 			}
 		}
-		cf = fopen("c.txt", "w+");
+		printf("\n");
+		printf("--------------------final outcome-------------------------\n");
 		for (i = 0; i < lineNum; i++)
 		{
 			for (j = 0; j < lineNum; j++)
 			{
-				fprintf(cf, "%d,", c[i][j]);
+				printf("%d,", c[i][j]);
 			}
-			fprintf(cf, "\n");
+			printf("\n");
 		}
-		fclose(cf);
-		for (i = 0; i < lineNum; i++)
-		{
-			free(c[i]);
-		}
-		free(c);
+//		fclose(cf);
+//		for (i = 0; i < lineNum; i++)
+//		{
+//			free(c[i]);
+//		}
+//		free(c);
 	}
 //	free(a);
 //	free(b);
