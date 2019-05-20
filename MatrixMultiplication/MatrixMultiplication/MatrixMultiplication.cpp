@@ -256,7 +256,7 @@ int *matrixAdd(int* matrix1, int *matrix2, int p, int lineNum)
 	return addMatrixCal;
 }
 
-int main()
+int main(int argc, char** argv)
 {
 	int *a = NULL;
 	int **b = NULL;
@@ -269,28 +269,31 @@ int main()
 	int i = 0, j = 0, q = 0, t = 0;
 	int lineNum = 0;
 	FILE *cf = NULL;
-	MPI_Init(NULL, NULL);
+	MPI_Init(&argc, &argv);
 
 	int world_rank;
 	MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
 	int world_size;
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
-	sub_matAs = (int **)malloc(world_size * sizeof(int *));
-	for (j = 0; j < world_size; j++) {
-		sub_matAs[j] = (int *)malloc(lineNum * lineNum / world_size * sizeof(int));
-	}
-
 	if (world_rank == 0)
 	{
-		lineNum = countLine("a2.txt");
-		a = readMatrixAFromFile("a2.txt", world_size, lineNum);
-		b = readMatrixBFromFile("b2.txt", lineNum);
+		lineNum = countLine(argv[1]);
+		if (lineNum % world_size != 0 || lineNum == world_size) {
+			printf("the number of processor is not correct");
+			MPI_Abort(MPI_COMM_WORLD, 1);
+		}
+		a = readMatrixAFromFile(argv[1], world_size, lineNum);
+		b = readMatrixBFromFile(argv[2], lineNum);
 	}
 	MPI_Bcast(&lineNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	printf("------------------------process %d lineNum: %d\n", world_rank, lineNum);
 	MPI_Bcast(&world_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
 	printf("------------------------process %d world_size: p%d\n", world_rank, world_size);
+	sub_matAs = (int **)malloc(world_size * sizeof(int *));
+	for (j = 0; j < world_size; j++) {
+		sub_matAs[j] = (int *)malloc(lineNum * lineNum / world_size * sizeof(int));
+	}
 	MPI_Scatter(a, lineNum / world_size *lineNum, MPI_INT, sub_matAs[0], lineNum / world_size *lineNum, MPI_INT, 0, MPI_COMM_WORLD);
 
 	sub_matB = (int *)malloc((lineNum * lineNum/world_size/world_size) * sizeof(int));
@@ -409,8 +412,18 @@ int main()
 			fprintf(cf, "\n");
 		}
 		fclose(cf);
+		for (i = 0; i < lineNum; i++)
+		{
+			free(c[i]);
+		}
+		free(c);
 	}
-
+//	free(a);
+//	free(b);
+//	free(sub_matB);
+//	free(sub_mat_mul);
+//	free(subs);
+//	free(sub_matAs);
 	MPI_Finalize();
     return 0;
 }
