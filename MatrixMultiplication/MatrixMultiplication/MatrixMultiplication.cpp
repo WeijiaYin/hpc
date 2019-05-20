@@ -42,10 +42,10 @@ int* readMatrixAFromFile(char *inputFile, int p, int lineNum) {
 	char line[1024];
 	int* matrixre;
 
-	matrix = new int*[lineNum];
+	matrix = (int **)malloc(lineNum * sizeof(int *));
 	for (i = 0; i < lineNum; i++)
 	{
-		matrix[i] = new int[lineNum];
+		matrix[i] = (int *)malloc(lineNum * sizeof(int));
 	}
 	matrixre = (int *)malloc(lineNum * lineNum * sizeof(int));
 	f = fopen(inputFile, "r+");
@@ -71,6 +71,10 @@ int* readMatrixAFromFile(char *inputFile, int p, int lineNum) {
 			}
 		}
 	}
+	for (i = 0; i < lineNum; i++)
+	{
+		free(matrix[i]);
+	}
 	free(matrix);
 	return matrixre;
 }
@@ -82,10 +86,10 @@ int** readMatrixBFromFile(char *inputFile, int lineNum) {
 	char *result;
 	char line[1024];
 
-	matrix = new int*[lineNum];
+	matrix = (int **)malloc(lineNum * sizeof(int *));
 	for (i = 0; i < lineNum; i++)
 	{
-		matrix[i] = new int[lineNum];
+		matrix[i] = (int *)malloc(lineNum * sizeof(int));
 	}
 
 	f = fopen(inputFile, "r+");
@@ -99,7 +103,7 @@ int** readMatrixBFromFile(char *inputFile, int lineNum) {
 			matrix[i][j] = atoi(result);
 		}
 	}
-
+	fclose(f);
 	return matrix;
 }
 
@@ -109,10 +113,10 @@ int **getSubB(int pNum, int p, int lineNum, int time, int **matrixB)
 	int i = 0 ,block = 0, j = 0, k = 0, t = 0, q= 0;
 
 	block = lineNum / p;
-	matrix = new int*[block];
+	matrix = (int **)malloc(block * sizeof(int *));
 	for (i = 0; i < block; i++)
 	{
-		matrix[i] = new int[block];
+		matrix[i] = (int *)malloc(block * sizeof(int));
 	}
 	for (j = ((time + pNum) % p) * block; j <((time + pNum) % p) * block + block; j++)
 	{
@@ -144,41 +148,26 @@ int *submatrixBs(int p, int lineNum, int time, int **matrixB)
 				t++;
 			}
 		}
-		free(temp);
 	}
-	return ret;
-}
-
-int* aaa(int *subA, int *subB1)
-{
-	for (int i = 0; i < 16; i++)
+	for (i = 0; i < block; i++)
 	{
-		subA[i] = subA[i] + subB1[0];
+		free(temp[i]);
 	}
-	return subA;
+	free(temp);
+	return ret;
 }
 
 int *multiple(int *subA, int *subB, int p, int lineNum)
 {
-	/*int c[8][2];
-	int a[8][2];
-	int b[2][2];*/
 	int **c = NULL;
 	int **a = NULL;
 	int **b = NULL;
 	int *cc = NULL;
 	int t = 0, i = 0, j = 0, k = 0;
-	int *aa;
-	int *bb;
 	int block = 0;
 	int ret = 0;
 
 	block = lineNum / p;
-/*	aa = (int *)malloc(block * lineNum * sizeof(int));
-	bb = (int *)malloc(block * block * sizeof(int));
-	memcpy(aa, subA, 16 * sizeof(int));
-	memcpy(bb, subB, 4 * sizeof(int));*/
-
 	a = (int **)malloc(lineNum * sizeof(int *));
 	for (i = 0; i < lineNum; i++) {
 		a[i] = (int *)malloc(block * sizeof(int));
@@ -198,7 +187,6 @@ int *multiple(int *subA, int *subB, int p, int lineNum)
 	{
 		for (j = 0; j < block; j++)
 		{
-			//a[i][j] = aa[t];
 			a[i][j] = subA[t];
 			t++;
 		}
@@ -207,7 +195,6 @@ int *multiple(int *subA, int *subB, int p, int lineNum)
 	t = 0;
 	for (i = 0; i < block; i++) {
 		for (j = 0; j < block; j++) {
-			//b[i][j] = bb[t];
 			b[i][j] = subB[t];
 			t++;
 		}
@@ -238,79 +225,22 @@ int *multiple(int *subA, int *subB, int p, int lineNum)
 			t++;
 		}
 	}
-	return cc;
-}
 
-/*int* submatrixMultiple(int *subA, int *subB1, int p, int lineNum)
-{
-	int i = 0, j = 0, k = 0, block = 0, t = 0, h = 0, f = 0, w= 0;
-	int **subAMatrix = NULL;
-	int **subAMatrixCal = NULL;
-	int **subB = NULL;
-	int *ret = NULL;
-	int *aa = NULL;
-	int *bb = NULL;
-
-	block = lineNum / p;
-	aa = (int *)malloc(lineNum*block * sizeof(int));
-	memcpy(aa, subA, lineNum*block * sizeof(int));
-	bb = (int *)malloc(block*block * sizeof(int));
-	memcpy(bb, subB1, block*block * sizeof(int));
-	subB = new int*[block];
+	for (i = 0; i < lineNum; i++)
+	{
+		free(a[i]);
+		free(c[i]);
+	}
+	free(a);
+	free(c);
 	for (i = 0; i < block; i++)
 	{
-		subB[i] = new int[block];
+		free(b[i]);
 	}
-	for (i = 0; i < block; i++) {
-		for (j = 0; j < block; j++) {
-			subB[i][j] = bb[k];
-			k++;
-		}
-	}
+	free(b);
 
-	subAMatrix = new int*[lineNum];
-	for (i = 0; i < lineNum; i++)
-	{
-		subAMatrix[i] = new int[block];
-	}
-	subAMatrixCal = new int*[lineNum];
-	for (i = 0; i < lineNum; i++)
-	{
-		subAMatrixCal[i] = new int[block];
-	}
-	for (i = 0; i < p ;i++)
-	{
-		for (j = block * i; j < block + block * i; j++)
-		{
-			for (k = 0; k < block; k++)
-			{
-				subAMatrix[j][k] = aa[t];
-				t++;
-			}
-			for (int h = 0; h < block; h++)
-			{
-				subAMatrixCal[j][h] = 0;
-				for (f = 0; f < block; f++)
-				{
-					subAMatrixCal[j][h] += subAMatrix[j][f] * subB[f][h];
-				}
-			}
-		}
-
-	}
-	k = 0;
-	ret = (int *)malloc(lineNum * p * sizeof(int));
-	for (i = 0; i < lineNum; i++)
-	{
-		for (j = 0; j < block; j++)
-		{
-			ret[k] = subAMatrixCal[i][j];
-			k++;
-		}
-	}
-	return ret;
+	return cc;
 }
-*/
 
 int *matrixAdd(int* matrix1, int *matrix2, int p, int lineNum)
 {
@@ -330,13 +260,12 @@ int main()
 {
 	int *a = NULL;
 	int **b = NULL;
-//	int *sub_mat = NULL;
 	int *sub_matB = NULL;
 	int *sub_mat_mul = NULL;
 	int *subs = NULL;
 	int **sub_matAs = NULL;
 	int *sum = NULL;
-	int i = 0;
+	int i = 0, j = 0, q = 0, t = 0;
 	int lineNum = 0;
 	MPI_Init(NULL, NULL);
 
@@ -346,51 +275,46 @@ int main()
 	MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
 	sub_matAs = (int **)malloc(world_size * sizeof(int *));
-	for (int j = 0; j < world_size; j++) {
+	for (j = 0; j < world_size; j++) {
 		sub_matAs[j] = (int *)malloc(lineNum * lineNum / world_size * sizeof(int));
 	}
 
 	if (world_rank == 0)
 	{
-		lineNum = countLine("a.txt");
-		a = readMatrixAFromFile("a.txt", world_size, lineNum);
-		b = readMatrixBFromFile("b.txt", lineNum);
+		lineNum = countLine("a2.txt");
+		a = readMatrixAFromFile("a2.txt", world_size, lineNum);
+		b = readMatrixBFromFile("b2.txt", lineNum);
 	}
 	MPI_Bcast(&lineNum, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	printf("process %d llllllllllllll%d\n", world_rank, lineNum);
+	printf("------------------------process %d lineNum: %d\n", world_rank, lineNum);
 	MPI_Bcast(&world_size, 1, MPI_INT, 0, MPI_COMM_WORLD);
-	printf("process %d pppppppppppppp%d\n", world_rank, world_size);
-//	sub_mat = (int *)malloc(lineNum / world_size *lineNum * sizeof(int));
+	printf("------------------------process %d world_size: p%d\n", world_rank, world_size);
 	MPI_Scatter(a, lineNum / world_size *lineNum, MPI_INT, sub_matAs[0], lineNum / world_size *lineNum, MPI_INT, 0, MPI_COMM_WORLD);
 
-	sub_matB = (int *)malloc(world_size * sizeof(int));
+	sub_matB = (int *)malloc((lineNum * lineNum/world_size/world_size) * sizeof(int));
 	if (world_rank == 0) {
 		subs = submatrixBs(world_size, lineNum, 0, b);
-		//MPI_Scatter(submatrixBs(world_size, lineNum, 0, b), world_size, MPI_INT, sub_matB, world_size, MPI_INT, 0, MPI_COMM_WORLD);
 	}
-	MPI_Scatter(subs, world_size, MPI_INT, sub_matB, world_size, MPI_INT, 0, MPI_COMM_WORLD);
-	//MPI_Scatter(submatrixBs(world_size, lineNum, 0, b), world_size, MPI_INT, sub_matB, world_size, MPI_INT, 0, MPI_COMM_WORLD);
+	MPI_Scatter(subs, (lineNum * lineNum / world_size / world_size), MPI_INT, sub_matB, (lineNum * lineNum / world_size / world_size), MPI_INT, 0, MPI_COMM_WORLD);
 
-	sub_mat_mul = (int *)malloc(16 * sizeof(int));
-
-	printf("I am proc %d\n", world_rank);
-	for (int i = 0; i < 4; i++)
+	sub_mat_mul = (int *)malloc(lineNum * lineNum / world_size * sizeof(int));
+	printf("--------------------round0-----------------------------process%d\n", world_rank);
+	printf("--------------------0000000-------subB------------------I am proc %d\n", world_rank);
+	for (i = 0; i < (lineNum * lineNum / world_size / world_size); i++)
 	{
 		printf("%d ", sub_matB[i]);
 	}
 	printf("\n");
-	for (int i = 0; i < 16; i++)
+	printf("--------------------0000000--------subA-----------------I am proc %d\n", world_rank);
+	for (i = 0; i < lineNum * lineNum / world_size; i++)
 	{
 		printf("%d ", sub_matAs[0][i]);
 	}
 	printf("\n");
 
-	//sub_mat_mul = submatrixMultiple(sub_mat, sub_matB, 4, lineNum);
-	//sub_mat_mul = aaa(sub_mat, sub_matB);
-	sub_mat_mul = multiple(sub_matAs[0], sub_matB, 4, lineNum);
-//	int bcd[16];
-//	memcpy(bcd, sub_mat_mul, 16 * sizeof(int));
-	for (int i = 0; i < 16; i++)
+	sub_mat_mul = multiple(sub_matAs[0], sub_matB, world_size, lineNum);
+	printf("--------------------000000--------subMultiple-----------I am proc %d\n", world_rank);
+	for (i = 0; i < lineNum * lineNum / world_size; i++)
 	{
 		
 		printf("%d ", sub_mat_mul[i]);
@@ -398,20 +322,24 @@ int main()
 	printf("\n");
 	printf("-------------------------------------------------------------------\n");
 	
-	for (int q = 1; q < world_size; q++)
+	for (q = 1; q < world_size; q++)
 	{
+		printf("\n");
+		printf("--------------round %d--------------process %d\n", q, world_rank);
 		if (world_rank == 0)
 		{
 			subs = submatrixBs(world_size, lineNum, q, b);
 		}
-		MPI_Scatter(subs, world_size, MPI_INT, sub_matB, world_size, MPI_INT, 0, MPI_COMM_WORLD);
+		MPI_Scatter(subs, (lineNum * lineNum / world_size / world_size), MPI_INT, sub_matB, (lineNum * lineNum / world_size / world_size), MPI_INT, 0, MPI_COMM_WORLD);
 
-		printf("222222222222222222222I am proc %d\n", world_rank);
-		for (int i = 0; i < 4; i++)
+		printf("--------------------------subB----------------process%d\n", world_rank);
+		for (i = 0; i < (lineNum * lineNum / world_size / world_size); i++)
 		{
 			printf("%d ", sub_matB[i]);
 		}
-		for (int i = 0; i < 16; i++)
+		printf("\n");
+		printf("--------------------------subA----------------process%d\n", world_rank);
+		for (i = 0; i < lineNum * lineNum / world_size; i++)
 		{
 			printf("%d ", sub_matAs[q -1][i]);
 		}
@@ -426,28 +354,27 @@ int main()
 			MPI_Sendrecv(sub_matAs[q-1], lineNum * lineNum / world_size, MPI_INT, world_rank - 1, 0, sub_matAs[q], lineNum * lineNum / world_size, MPI_INT, world_rank + 1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
 		}
 
-		//		MPI_Sendrecv(sub_mat, 16, MPI_INT, left, 0, sub_matAs[0], 16, MPI_INT, right, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-
-		printf("asddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffprocess%d\n", world_rank);
-		for (int i = 0; i < 16; i++)
+		printf("\n");
+		printf("submatA------------------------------------------------------process%d\n", world_rank);
+		for (i = 0; i < lineNum * lineNum / world_size; i++)
 		{
 			printf("%d ", sub_matAs[q-1][i]);
 		}
 		printf("\n");
 		sub_mat_mul = matrixAdd(sub_mat_mul, multiple(sub_matAs[q], sub_matB, world_size, lineNum), world_size, lineNum);
-		printf("9999999999999999999999999999999999999999999999999999999999999999999999999999999process%d\n", world_rank);
-		for (int i = 0; i < 16; i++)
+		printf("--------------------matrixMulti-------------------------------process%d\n", world_rank);
+		for (i = 0; i < lineNum * lineNum / world_size; i++)
 		{
 			printf("%d ", sub_mat_mul[i]);
 		}
 	}
-
+	printf("\n");
 	MPI_Barrier(MPI_COMM_WORLD);
-	sum = (int *)malloc(64 * sizeof(int));
-	MPI_Gather(sub_mat_mul, 16, MPI_INT, sum, 16, MPI_INT, 0, MPI_COMM_WORLD);
+	sum = (int *)malloc(lineNum * sizeof(int));
+	MPI_Gather(sub_mat_mul, lineNum * lineNum / world_size, MPI_INT, sum, lineNum * lineNum / world_size, MPI_INT, 0, MPI_COMM_WORLD);
 	if (world_rank == 0) {
-		printf("uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu");
-		for (int i = 0; i < 64; i++)
+		printf("---------------------------------------outcome--------------------------------------------\n");
+		for (i = 0; i < lineNum * lineNum; i++)
 		{
 			printf("%d ", sum[i]);
 		}

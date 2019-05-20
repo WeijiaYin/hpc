@@ -1,2 +1,4 @@
-﻿  MatrixMultiplication.vcxproj -> D:\Politechnika\hpc\MatrixMultiplication\x64\Debug\MatrixMultiplication.exe
+﻿  MatrixMultiplication.cpp
+d:\politechnika\hpc\matrixmultiplication\matrixmultiplication\matrixmultiplication.cpp(247): warning C4101: 'j': unreferenced local variable
+  MatrixMultiplication.vcxproj -> D:\Politechnika\hpc\MatrixMultiplication\x64\Debug\MatrixMultiplication.exe
   MatrixMultiplication.vcxproj -> D:\Politechnika\hpc\MatrixMultiplication\x64\Debug\MatrixMultiplication.pdb (Full PDB)
